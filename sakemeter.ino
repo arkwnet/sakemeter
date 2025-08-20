@@ -2,52 +2,97 @@
 #include "img/header.h"
 #include "img/contents.h"
 #include "img/footer.h"
+#include "img/large.h"
 #include "img/medium.h"
 
-TFT_eSprite sprite(&M5.Lcd);
 const int VERSION[3] = { 1, 0, 0 };
 const int SCREEN_WIDTH = 320;
 const int SCREEN_HEIGHT = 240;
 
-bool redraw = false;
+bool redrawHeader = false;
+int redrawContents = -1;
+bool redrawFooter = false;
+unsigned short large[4][4032];
 int count = 0;
 int h = 0;
 int m = 0;
 int s = 0;
+int alcohol = 0;
 
 void setup() {
   M5.begin();
   M5.Lcd.setSwapBytes(true);
   M5.Lcd.setBrightness(255);
-  sprite.createSprite(SCREEN_WIDTH, 102);
-  redraw = true;
+  redrawHeader = true;
+  redrawContents = 0;
+  redrawFooter = true;
 }
 
 void loop() {
   M5.update();
-  if (redraw == true) {
+  if (redrawHeader == true) {
     M5.Lcd.startWrite();
-    // Header
-    sprite.pushImage(0, 0, SCREEN_WIDTH, 58, header);
+    M5.Lcd.pushImage(0, 0, SCREEN_WIDTH, 34, header);
     drawMedium(217, 8, h / 10);
     drawMedium(233, 8, h % 10);
     drawMedium(264, 8, m / 10);
     drawMedium(280, 8, m % 10);
-    sprite.pushSprite(0, 0);
-    // Main
-    sprite.pushImage(0, 0, SCREEN_WIDTH, 80, contents);
-    sprite.pushSprite(0, 58);
-    // Footer
-    sprite.pushImage(0, 0, SCREEN_WIDTH, 102, footer);
-    sprite.pushSprite(0, 138);
     M5.Lcd.endWrite();
-    redraw = false;
+    redrawHeader = false;
+  }
+  if (redrawContents >= 0) {
+    M5.Lcd.startWrite();
+    if (redrawContents == 0) {
+      M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents);
+      if (alcohol >= 1000) {
+        getLarge(0, alcohol / 1000 % 10);
+      }
+      if (alcohol >= 100) {
+        getLarge(1, alcohol / 100 % 10);
+      }
+      if (alcohol >= 10) {
+        getLarge(2, alcohol / 10 % 10);
+      } else {
+        getLarge(2, 0);
+      }
+      getLarge(3, alcohol % 10);
+    }
+    for (int x = 0; x < 56; x++) {
+      int t = redrawContents * 56 + x;
+      if (alcohol >= 1000) {
+        if (large[0][t] != 0x0000) {
+          M5.Lcd.drawPixel(4 + x, 60 + redrawContents, large[0][t]);
+        }
+      }
+      if (alcohol >= 100) {
+        if (large[1][t] != 0x0000) {
+          M5.Lcd.drawPixel(64 + x, 60 + redrawContents, large[1][t]);
+        }
+      }
+      if (large[2][t] != 0x0000) {
+        M5.Lcd.drawPixel(124 + x, 60 + redrawContents, large[2][t]);
+      }
+      if (large[3][t] != 0x0000) {
+        M5.Lcd.drawPixel(218 + x, 60 + redrawContents, large[3][t]);
+      }
+    }
+    M5.Lcd.endWrite();
+    redrawContents++;
+    if (redrawContents >= 72) {
+      redrawContents = -1;
+    }
+  }
+  if (redrawFooter == true) {
+    M5.Lcd.startWrite();
+    M5.Lcd.pushImage(0, 138, SCREEN_WIDTH, 102, footer);
+    M5.Lcd.endWrite();
+    redrawFooter = false;
   }
   count++;
   if (count == 30) {
     s++;
     if (s >= 60) {
-      redraw = true;
+      redrawHeader = true;
       s = 0;
       m++;
     }
@@ -61,6 +106,43 @@ void loop() {
     count = 0;
   }
   delay(1000 / 30);
+}
+
+void getLarge(int p, int i) {
+  int bsize = sizeof(large[p]);
+  switch (i) {
+    case 0:
+      memcpy(large[p], large0, bsize);
+      break;
+    case 1:
+      memcpy(large[p], large1, bsize);
+      break;
+    case 2:
+      memcpy(large[p], large2, bsize);
+      break;
+    case 3:
+      memcpy(large[p], large3, bsize);
+      break;
+    case 4:
+      memcpy(large[p], large4, bsize);
+      break;
+    case 5:
+      memcpy(large[p], large5, bsize);
+      break;
+    case 6:
+      memcpy(large[p], large6, bsize);
+      break;
+    case 7:
+      memcpy(large[p], large7, bsize);
+      break;
+    case 8:
+      memcpy(large[p], large8, bsize);
+      break;
+    case 9:
+      memcpy(large[p], large9, bsize);
+      break;
+  }
+  return;
 }
 
 void drawMedium(int x, int y, int i) {
@@ -98,6 +180,6 @@ void drawMedium(int x, int y, int i) {
       memcpy(medium, medium9, msize);
       break;
   }
-  sprite.pushImage(x, y, 16, 20, medium);
+  M5.Lcd.pushImage(x, y, 16, 20, medium);
   return;
 }
