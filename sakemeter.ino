@@ -1,4 +1,6 @@
 #include <M5Stack.h>
+#include "img/splash.h"
+#include "img/notice.h"
 #include "img/header.h"
 #include "img/contents.h"
 #include "img/footer.h"
@@ -16,6 +18,7 @@ int redrawContents = -1;
 bool redrawFooter = false;
 unsigned short large[4][4032];
 int count = 0;
+int mode = 0;
 int h = 0;
 int m = 0;
 int s = 0;
@@ -35,116 +38,141 @@ void setup() {
 
 void loop() {
   M5.update();
-  if (redrawHeader == true) {
-    M5.Lcd.startWrite();
-    M5.Lcd.pushImage(0, 0, SCREEN_WIDTH, 34, header);
-    drawMedium(217, 8, h / 10);
-    drawMedium(233, 8, h % 10);
-    drawMedium(264, 8, m / 10);
-    drawMedium(280, 8, m % 10);
-    M5.Lcd.endWrite();
-    redrawHeader = false;
-  }
-  if (redrawContents >= 0) {
-    M5.Lcd.startWrite();
-    if (redrawContents == 0) {
-      if (alcohol == 0) {
-        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents0);
-      } else if (alcohol > 0 && alcohol <= 400) {
-        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents1);
-      } else if (alcohol > 400 && alcohol <= 800) {
-        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents2);
-      } else if (alcohol > 800 && alcohol <= 1200) {
-        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents3);
-      } else if (alcohol > 1200) {
-        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents4);
+  switch(mode) {
+    case 0:
+      if (count == 0) {
+        M5.Lcd.startWrite();
+        M5.Lcd.pushImage(0, 30, SCREEN_WIDTH, 180, splash);
       }
-      if (alcohol >= 1000) {
-        getLarge(0, alcohol / 1000 % 10);
+      count++;
+      if (count >= 60) {
+        count = 0;
+        mode = 1;
       }
-      if (alcohol >= 100) {
-        getLarge(1, alcohol / 100 % 10);
+      break;
+    case 1:
+      if (count == 0) {
+        M5.Lcd.startWrite();
+        M5.Lcd.pushImage(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, notice);
       }
-      if (alcohol >= 10) {
-        getLarge(2, alcohol / 10 % 10);
-      } else {
-        getLarge(2, 0);
+      if (M5.BtnA.wasReleased() || M5.BtnB.wasReleased() || M5.BtnC.wasReleased()) {
+        count = 0;
+        mode = 2;
       }
-      getLarge(3, alcohol % 10);
-    }
-    for (int i = 0; i < 16; i++) {
-      for (int x = 0; x < 56; x++) {
-        int t = redrawContents * 56 + x;
-        if (alcohol >= 1000) {
-          if (large[0][t] != 0x0000) {
-            M5.Lcd.drawPixel(4 + x, 60 + redrawContents, large[0][t]);
+      break;
+    case 2:
+      if (redrawHeader == true) {
+        M5.Lcd.startWrite();
+        M5.Lcd.pushImage(0, 0, SCREEN_WIDTH, 34, header);
+        drawMedium(217, 8, h / 10);
+        drawMedium(233, 8, h % 10);
+        drawMedium(264, 8, m / 10);
+        drawMedium(280, 8, m % 10);
+        M5.Lcd.endWrite();
+        redrawHeader = false;
+      }
+      if (redrawContents >= 0) {
+        M5.Lcd.startWrite();
+        if (redrawContents == 0) {
+          if (alcohol == 0) {
+            M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents0);
+          } else if (alcohol > 0 && alcohol <= 400) {
+            M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents1);
+          } else if (alcohol > 400 && alcohol <= 800) {
+            M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents2);
+          } else if (alcohol > 800 && alcohol <= 1200) {
+            M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents3);
+          } else if (alcohol > 1200) {
+            M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents4);
+          }
+          if (alcohol >= 1000) {
+            getLarge(0, alcohol / 1000 % 10);
+          }
+          if (alcohol >= 100) {
+            getLarge(1, alcohol / 100 % 10);
+          }
+          if (alcohol >= 10) {
+            getLarge(2, alcohol / 10 % 10);
+          } else {
+            getLarge(2, 0);
+          }
+          getLarge(3, alcohol % 10);
+        }
+        for (int i = 0; i < 16; i++) {
+          for (int x = 0; x < 56; x++) {
+            int t = redrawContents * 56 + x;
+            if (alcohol >= 1000) {
+              if (large[0][t] != 0x0000) {
+                M5.Lcd.drawPixel(4 + x, 60 + redrawContents, large[0][t]);
+              }
+            }
+            if (alcohol >= 100) {
+              if (large[1][t] != 0x0000) {
+                M5.Lcd.drawPixel(64 + x, 60 + redrawContents, large[1][t]);
+              }
+            }
+            if (large[2][t] != 0x0000) {
+              M5.Lcd.drawPixel(124 + x, 60 + redrawContents, large[2][t]);
+            }
+            if (large[3][t] != 0x0000) {
+              M5.Lcd.drawPixel(218 + x, 60 + redrawContents, large[3][t]);
+            }
+          }
+          redrawContents++;
+          if (redrawContents >= 72) {
+            redrawContents = -1;
+            break;
           }
         }
-        if (alcohol >= 100) {
-          if (large[1][t] != 0x0000) {
-            M5.Lcd.drawPixel(64 + x, 60 + redrawContents, large[1][t]);
+        M5.Lcd.endWrite();
+      }
+      if (redrawFooter == true) {
+        M5.Lcd.startWrite();
+        M5.Lcd.pushImage(0, 138, SCREEN_WIDTH, 102, footer);
+        drawType();
+        drawAmount();
+        M5.Lcd.endWrite();
+        redrawFooter = false;
+      }
+      if (M5.BtnA.wasReleased()) {
+        select1++;
+        if (select1 >= 6) {
+          select1 = 0;
+        }
+        redrawFooter = true;
+      }
+      if (M5.BtnB.wasReleased() && redrawContents == -1) {
+        drink();
+      }
+      if (M5.BtnC.wasReleased()) {
+        select2++;
+        if (select2 >= 5) {
+          select2 = 0;
+        }
+        redrawFooter = true;
+      }
+      count++;
+      if (count == 30) {
+        s++;
+        if (s >= 60) {
+          if (alcohol > 0) {
+            alcohol--;
+            redrawContents = 0;
           }
+          redrawHeader = true;
+          s = 0;
+          m++;
         }
-        if (large[2][t] != 0x0000) {
-          M5.Lcd.drawPixel(124 + x, 60 + redrawContents, large[2][t]);
+        if (m >= 60) {
+          m = 0;
+          h++;
         }
-        if (large[3][t] != 0x0000) {
-          M5.Lcd.drawPixel(218 + x, 60 + redrawContents, large[3][t]);
+        if (h >= 100) {
+          h = 0;
         }
+        count = 0;
       }
-      redrawContents++;
-      if (redrawContents >= 72) {
-        redrawContents = -1;
-        break;
-      }
-    }
-    M5.Lcd.endWrite();
-  }
-  if (redrawFooter == true) {
-    M5.Lcd.startWrite();
-    M5.Lcd.pushImage(0, 138, SCREEN_WIDTH, 102, footer);
-    drawType();
-    drawAmount();
-    M5.Lcd.endWrite();
-    redrawFooter = false;
-  }
-  if (M5.BtnA.wasReleased()) {
-    select1++;
-    if (select1 >= 6) {
-      select1 = 0;
-    }
-    redrawFooter = true;
-  }
-  if (M5.BtnB.wasReleased() && redrawContents == -1) {
-    drink();
-  }
-  if (M5.BtnC.wasReleased()) {
-    select2++;
-    if (select2 >= 5) {
-      select2 = 0;
-    }
-    redrawFooter = true;
-  }
-  count++;
-  if (count == 30) {
-    s++;
-    if (s >= 60) {
-      if (alcohol > 0) {
-        alcohol--;
-        redrawHeader = true;
-        redrawContents = 0;
-      }
-      s = 0;
-      m++;
-    }
-    if (m >= 60) {
-      m = 0;
-      h++;
-    }
-    if (h >= 100) {
-      h = 0;
-    }
-    count = 0;
+      break;
   }
   delay(1000 / 30);
 }
