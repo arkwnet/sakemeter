@@ -25,6 +25,7 @@ int select2 = 0;
 
 void setup() {
   M5.begin();
+  setCpuFrequencyMhz(80);
   M5.Lcd.setSwapBytes(true);
   M5.Lcd.setBrightness(255);
   redrawHeader = true;
@@ -61,30 +62,33 @@ void loop() {
       }
       getLarge(3, alcohol % 10);
     }
-    for (int x = 0; x < 56; x++) {
-      int t = redrawContents * 56 + x;
-      if (alcohol >= 1000) {
-        if (large[0][t] != 0x0000) {
-          M5.Lcd.drawPixel(4 + x, 60 + redrawContents, large[0][t]);
+    for (int i = 0; i < 16; i++) {
+      for (int x = 0; x < 56; x++) {
+        int t = redrawContents * 56 + x;
+        if (alcohol >= 1000) {
+          if (large[0][t] != 0x0000) {
+            M5.Lcd.drawPixel(4 + x, 60 + redrawContents, large[0][t]);
+          }
+        }
+        if (alcohol >= 100) {
+          if (large[1][t] != 0x0000) {
+            M5.Lcd.drawPixel(64 + x, 60 + redrawContents, large[1][t]);
+          }
+        }
+        if (large[2][t] != 0x0000) {
+          M5.Lcd.drawPixel(124 + x, 60 + redrawContents, large[2][t]);
+        }
+        if (large[3][t] != 0x0000) {
+          M5.Lcd.drawPixel(218 + x, 60 + redrawContents, large[3][t]);
         }
       }
-      if (alcohol >= 100) {
-        if (large[1][t] != 0x0000) {
-          M5.Lcd.drawPixel(64 + x, 60 + redrawContents, large[1][t]);
-        }
-      }
-      if (large[2][t] != 0x0000) {
-        M5.Lcd.drawPixel(124 + x, 60 + redrawContents, large[2][t]);
-      }
-      if (large[3][t] != 0x0000) {
-        M5.Lcd.drawPixel(218 + x, 60 + redrawContents, large[3][t]);
+      redrawContents++;
+      if (redrawContents >= 72) {
+        redrawContents = -1;
+        break;
       }
     }
     M5.Lcd.endWrite();
-    redrawContents++;
-    if (redrawContents >= 72) {
-      redrawContents = -1;
-    }
   }
   if (redrawFooter == true) {
     M5.Lcd.startWrite();
@@ -101,6 +105,9 @@ void loop() {
     }
     redrawFooter = true;
   }
+  if (M5.BtnB.wasReleased() && redrawContents == -1) {
+    drink();
+  }
   if (M5.BtnC.wasReleased()) {
     select2++;
     if (select2 >= 5) {
@@ -112,7 +119,11 @@ void loop() {
   if (count == 30) {
     s++;
     if (s >= 60) {
-      redrawHeader = true;
+      if (alcohol > 0) {
+        alcohol--;
+        redrawHeader = true;
+        redrawContents = 0;
+      }
       s = 0;
       m++;
     }
@@ -254,5 +265,53 @@ void drawAmount() {
       M5.Lcd.pushImage(dx, dy, dw, dh, amount4);
       break;
   }
+  return;
+}
+
+void drink() {
+  float t;
+  int a;
+  switch (select1) {
+    case 0:
+      t = 0.4;
+      break;
+    case 1:
+      t = 0.6;
+      break;
+    case 2:
+      t = 1.0;
+      break;
+    case 3:
+      t = 1.2;
+      break;
+    case 4:
+      t = 2.0;
+      break;
+    case 5:
+      t = 3.2;
+      break;
+  }
+  switch (select2) {
+    case 0:
+      a = 45;
+      break;
+    case 1:
+      a = 150;
+      break;
+    case 2:
+      a = 300;
+      break;
+    case 3:
+      a = 500;
+      break;
+    case 4:
+      a = 800;
+      break;
+  }
+  alcohol += (int)(t * a);
+  if (alcohol >= 10000) {
+    alcohol = 9999;
+  }
+  redrawContents = 0;
   return;
 }
