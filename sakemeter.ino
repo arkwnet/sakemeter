@@ -4,6 +4,7 @@
 #include "img/footer.h"
 #include "img/large.h"
 #include "img/medium.h"
+#include "img/type.h"
 #include "img/amount.h"
 
 const int VERSION[3] = { 1, 0, 0 };
@@ -19,6 +20,7 @@ int h = 0;
 int m = 0;
 int s = 0;
 int alcohol = 0;
+int select1 = 0;
 int select2 = 0;
 
 void setup() {
@@ -87,9 +89,17 @@ void loop() {
   if (redrawFooter == true) {
     M5.Lcd.startWrite();
     M5.Lcd.pushImage(0, 138, SCREEN_WIDTH, 102, footer);
+    drawType();
     drawAmount();
     M5.Lcd.endWrite();
     redrawFooter = false;
+  }
+  if (M5.BtnA.wasReleased()) {
+    select1++;
+    if (select1 >= 6) {
+      select1 = 0;
+    }
+    redrawFooter = true;
   }
   if (M5.BtnC.wasReleased()) {
     select2++;
@@ -191,6 +201,34 @@ void drawMedium(int x, int y, int i) {
       break;
   }
   M5.Lcd.pushImage(x, y, 16, 20, medium);
+  return;
+}
+
+void drawType() {
+  int dx = 7;
+  int dy = 149;
+  int dw = 146;
+  int dh = 38;
+  switch (select1) {
+    case 0:
+      M5.Lcd.pushImage(dx, dy, dw, dh, type0);
+      break;
+    case 1:
+      M5.Lcd.pushImage(dx, dy, dw, dh, type1);
+      break;
+    case 2:
+      M5.Lcd.pushImage(dx, dy, dw, dh, type2);
+      break;
+    case 3:
+      M5.Lcd.pushImage(dx, dy, dw, dh, type3);
+      break;
+    case 4:
+      M5.Lcd.pushImage(dx, dy, dw, dh, type4);
+      break;
+    case 5:
+      M5.Lcd.pushImage(dx, dy, dw, dh, type5);
+      break;
+  }
   return;
 }
 
