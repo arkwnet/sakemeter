@@ -48,7 +48,17 @@ void loop() {
   if (redrawContents >= 0) {
     M5.Lcd.startWrite();
     if (redrawContents == 0) {
-      M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents);
+      if (alcohol == 0) {
+        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents0);
+      } else if (alcohol > 0 && alcohol <= 400) {
+        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents1);
+      } else if (alcohol > 400 && alcohol <= 800) {
+        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents2);
+      } else if (alcohol > 800 && alcohol <= 1200) {
+        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents3);
+      } else if (alcohol > 1200) {
+        M5.Lcd.pushImage(0, 34, SCREEN_WIDTH, 104, contents4);
+      }
       if (alcohol >= 1000) {
         getLarge(0, alcohol / 1000 % 10);
       }
